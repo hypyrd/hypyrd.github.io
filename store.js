@@ -1,5 +1,8 @@
 var items = []
 
+var server_uri = 'https://listalous.herokuapp.com/lists/CHEWIE-FURRY/'
+//var server_uri = 'https://listalous.herokuapp.com/lists/rinataur/'
+
 var notifyComponents = function() {
   $(ListStore).trigger('storeHasChanged')
 }
@@ -16,7 +19,39 @@ ListStore = {
     return items
   },
 
-  loadItems: function() {},
-  addItem: function(itemDescription) {},
-  toggleCompleteness: function(itemId) {}
+  loadItems: function() {
+    var loadRequest = $.ajax({
+          type: 'GET',
+          url: server_uri,
+        })
+    loadRequest.done(function(dataFromServer) {
+      items = dataFromServer.items
+      notifyComponents()
+    })
+  },
+  addItem: function(itemDescription) {
+    var creationRequest = $.ajax({
+        type: 'POST',
+        url: server_uri + "/items",
+        data: { description: itemDescription, completed: false }
+    })
+    creationRequest.done(function(itemDataFromServer) {
+        items.push(itemDataFromServer)
+        notifyComponents()
+    })
+  },
+  toggleCompleteness: function(itemId) {
+    var item = findItemById(itemId)
+    var currentCompletedValue = item.completed
+
+    var updateRequest = $.ajax({
+        type: 'PUT',
+        url: server_uri + "/items/" + itemId,
+        data: { completed: !currentCompletedValue }
+    })
+    updateRequest.done(function(itemData) {
+        item.completed = itemData.completed
+        notifyComponents()
+    })
+  }
 }
